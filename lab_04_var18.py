@@ -8,7 +8,7 @@ app = flask.Flask(__name__) # создается объект и констру�
 
 import time
 import logging
-import pymysql.cursors
+
 
 
 logging.basicConfig(filename="secnotify.log",
@@ -52,7 +52,19 @@ def MainPage():
 
 
 import os
+
 #from db import get_connection
+import sqlite3
+
+def sqlite_simple_db():
+    db = sqlite3.connect('server.db')
+    cursor = db.cursor()
+
+    cursor.execute('CREATE TABLE IF NO EXIST users (name TEXT, password TEXT)')
+    cursor.execute('INSERT INTO users VALUES("root", "123")')
+    db.commit()
+
+
 
 
 def authenticate(name, password):
@@ -63,10 +75,11 @@ def authenticate(name, password):
                                                         name=name,
                                                         password=password,
                                                     )
-    cursor = get_connection(
-                            os.environ['DB_LOGIN'],
-                            os.environ['DB_PASSWORD']
-                            ).cursor()
+    # cursor = get_connection(
+    #                         os.environ['DB_LOGIN'],
+    #                         os.environ['DB_PASSWORD']
+    #                         ).cursor()
+    cursor = sqlite3.connect('server.db').cursor()
     result = cursor.execute(sql_statement).fetchone()
     cursor.close()
     return result
@@ -106,7 +119,7 @@ def login_page():
         if redirect_url:
             response = flask.make_response(flask.redirect(redirect_url))
             if just_auth:
-                response.set_cookie('ssid', hmac.digest())
+                response.set_cookie('ssid', hmac.digest(), httponly=True)
             return response
 
         return """
